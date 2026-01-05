@@ -7,25 +7,10 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Layout Responsivo para o Container */
         .admin-container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
-        
-        /* Ajuste do Formulário */
-        .form-cadastro {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-        }
+        .form-cadastro { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 20px; border-radius: 15px; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 colunas no desktop */
-            gap: 12px;
-        }
-
-        /* No Celular, o formulário vira uma única coluna */
         @media (max-width: 600px) {
             .form-grid { grid-template-columns: 1fr; }
             .form-grid textarea, .btn-cadastrar { grid-column: auto; }
@@ -34,52 +19,18 @@
         }
 
         .form-grid input, .form-grid textarea {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #444;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            font-family: inherit;
-            width: 100%;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid #444; color: white;
+            padding: 12px; border-radius: 8px; font-family: inherit; width: 100%;
         }
 
         .form-grid textarea { grid-column: span 2; resize: vertical; }
         .btn-cadastrar { grid-column: span 2; font-weight: bold; margin-top: 10px; }
 
-        /* Estilos da Tabela com Scroll Mobile */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto; /* Permite deslizar a tabela pro lado no celular */
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .input-edit {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #444;
-            color: white;
-            padding: 5px;
-            border-radius: 5px;
-            width: 80px;
-            text-align: center;
-        }
-
-        .btn-delete {
-            background: none;
-            border: none;
-            color: #ff4b2b;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 10px;
-        }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .input-edit { background: rgba(255, 255, 255, 0.1); border: 1px solid #444; color: white; padding: 5px; border-radius: 5px; width: 80px; text-align: center; }
+        .btn-delete { background: none; border: none; color: #ff4b2b; cursor: pointer; font-size: 1.2rem; padding: 10px; }
         
-        /* Cards de Resumo */
-        .resumo-card {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
+        .resumo-card { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
         .card small { font-size: 0.7rem; opacity: 0.8; }
         .card h2 { font-size: 1.2rem; margin-top: 5px; }
     </style>
@@ -94,7 +45,6 @@
     </header>
 
     <main class="admin-container">
-        
         <div class="resumo-card">
             <div class="card" style="border-left: 5px solid #ffde59; padding: 15px;">
                 <small>INVESTIMENTO</small>
@@ -122,7 +72,7 @@
                 <input type="number" id="custo" step="0.01" placeholder="Custo (R$)" required>
                 <input type="number" id="preco" step="0.01" placeholder="Venda (R$)" required>
                 <textarea id="detalhes" rows="3" placeholder="Descrição detalhada..."></textarea>
-                <button type="submit" class="btn btn-cadastrar">CADASTRAR NO ESTOQUE</button>
+                <button type="submit" class="btn btn-cadastrar">SALVAR NO ARSENAL</button>
             </form>
         </section>
 
@@ -146,17 +96,20 @@
     </main>
 
     <script>
+        // CHAVE ÚNICA DE ARMAZENAMENTO - Não mude isso
+        const DATABASE_KEY = 'produtos_loja';
+
         function atualizarTabela() {
             const lista = document.getElementById('lista-gestao');
-            const produtos = JSON.parse(localStorage.getItem('produtos_loja')) || [];
+            const produtos = JSON.parse(localStorage.getItem(DATABASE_KEY)) || [];
             lista.innerHTML = '';
 
             let custoAcumulado = 0;
             let vendaAcumulada = 0;
 
             produtos.forEach(p => {
-                custoAcumulado += (p.custo * p.estoque);
-                vendaAcumulada += (p.preco * p.estoque);
+                custoAcumulado += (Number(p.custo) * Number(p.estoque));
+                vendaAcumulada += (Number(p.preco) * Number(p.estoque));
 
                 lista.innerHTML += `
                     <tr style="border-bottom: 1px solid #333;">
@@ -183,28 +136,29 @@
         }
 
         function editar(id, campo, valor) {
-            let produtos = JSON.parse(localStorage.getItem('produtos_loja')) || [];
+            let produtos = JSON.parse(localStorage.getItem(DATABASE_KEY)) || [];
             const index = produtos.findIndex(p => p.id === id);
             if(index !== -1) {
                 produtos[index][campo] = parseFloat(valor);
-                localStorage.setItem('produtos_lo_ja', JSON.stringify(produtos)); // Compatibilidade
-                localStorage.setItem('produtos_loja', JSON.stringify(produtos));
+                localStorage.setItem(DATABASE_KEY, JSON.stringify(produtos));
                 atualizarTabela();
             }
         }
 
         function remover(id) {
-            if(confirm("Deseja deletar este produto?")) {
-                let produtos = JSON.parse(localStorage.getItem('produtos_loja')) || [];
+            if(confirm("Deseja deletar este produto permanentemente?")) {
+                let produtos = JSON.parse(localStorage.getItem(DATABASE_KEY)) || [];
                 const filtrados = produtos.filter(p => p.id !== id);
-                localStorage.setItem('produtos_loja', JSON.stringify(filtrados));
+                localStorage.setItem(DATABASE_KEY, JSON.stringify(filtrados));
                 atualizarTabela();
             }
         }
 
         document.getElementById('form-novo-produto').addEventListener('submit', function(e) {
             e.preventDefault();
-            const produtos = JSON.parse(localStorage.getItem('produtos_loja')) || [];
+            // Sempre busca a lista atualizada antes de salvar
+            const produtos = JSON.parse(localStorage.getItem(DATABASE_KEY)) || [];
+            
             const novo = {
                 id: Date.now(),
                 nome: document.getElementById('nome').value,
@@ -215,10 +169,13 @@
                 preco: parseFloat(document.getElementById('preco').value),
                 detalhes: document.getElementById('detalhes').value
             };
+
             produtos.push(novo);
-            localStorage.setItem('produtos_loja', JSON.stringify(produtos));
+            localStorage.setItem(DATABASE_KEY, JSON.stringify(produtos));
+            
             this.reset();
             atualizarTabela();
+            alert("Produto salvo com sucesso!");
         });
 
         function logout() { sessionStorage.removeItem('logado'); window.location.href = "login.html"; }
