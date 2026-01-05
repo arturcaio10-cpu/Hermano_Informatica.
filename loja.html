@@ -43,13 +43,13 @@
         /* AJUSTES PARA CELULAR */
         @media (max-width: 600px) {
             .produto-grid {
-                grid-template-columns: 1fr 1fr; /* 2 Itens por linha no mobile */
+                grid-template-columns: 1fr 1fr;
                 gap: 10px;
                 padding: 10px;
             }
-            .img-container { height: 140px; } /* Imagem menor no mobile */
-            .card h3 { font-size: 0.9rem; margin: 5px 0; }
-            .card p { display: none; } /* Esconde a descrição longa na vitrine mobile */
+            .img-container { height: 140px; }
+            .card h3 { font-size: 0.9rem; margin: 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .card p.desc-curta { display: none; } 
             .preco-vitrine { font-size: 1.1rem !important; }
             .btn-detalhes { padding: 8px; font-size: 0.7rem; }
             .input-qtd-mobile { width: 40px !important; font-size: 0.8rem !important; }
@@ -78,6 +78,9 @@
     </main>
 
     <script>
+    // CHAVE PADRONIZADA COM O ADMIN
+    const DATABASE_KEY = 'produtos_loja';
+
     function atualizarBadge() {
         const cartCount = document.getElementById('cart-count');
         const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
@@ -87,11 +90,16 @@
 
     function carregarProdutos() {
         const vitrine = document.getElementById('vitrine');
-        // Tenta pegar de produtos_loja, se não achar, tenta produtos_lo_ja
-        let produtos = JSON.parse(localStorage.getItem('produtos_loja')) || JSON.parse(localStorage.getItem('produtos_lo_ja')) || [];
+        // Agora busca apenas na chave principal produtos_loja
+        let produtos = JSON.parse(localStorage.getItem(DATABASE_KEY)) || [];
         
         vitrine.innerHTML = '';
         atualizarBadge();
+
+        if (produtos.length === 0) {
+            vitrine.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#888;">Nenhum item no arsenal no momento.</p>';
+            return;
+        }
 
         produtos.forEach((prod) => {
             if (prod.estoque > 0) {
@@ -109,10 +117,10 @@
                                  alt="${prod.nome}">
                         </div>
                         <h3>${prod.nome}</h3>
-                        <p style="font-size: 0.75rem; color: #888; height: 30px; overflow: hidden; margin-bottom: 5px;">
+                        <p class="desc-curta" style="font-size: 0.75rem; color: #888; height: 30px; overflow: hidden; margin-bottom: 5px;">
                             ${prod.detalhes || ''}
                         </p>
-                        <p class="preco-vitrine" style="color: #00d4ff; font-weight: bold; font-size: 1.3rem; margin: 5px 0;">R$ ${prod.preco.toFixed(2)}</p>
+                        <p class="preco-vitrine" style="color: #00d4ff; font-weight: bold; font-size: 1.3rem; margin: 5px 0;">R$ ${Number(prod.preco).toFixed(2)}</p>
                         
                         <div style="display: flex; flex-direction: column; gap: 5px; margin-top: auto;" onclick="event.stopPropagation()">
                             <button class="btn btn-detalhes" onclick="irParaProduto(${prod.id})">
@@ -138,13 +146,16 @@
     }
 
     function comprar(id) {
-        let produtos = JSON.parse(localStorage.getItem('produtos_loja')) || JSON.parse(localStorage.getItem('produtos_lo_ja')) || [];
+        let produtos = JSON.parse(localStorage.getItem(DATABASE_KEY)) || [];
         let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
         const index = produtos.findIndex(p => p.id === id);
-        const qtdDesejada = parseInt(document.getElementById(`qtd-compra-${id}`).value);
+        
+        const inputQtd = document.getElementById(`qtd-compra-${id}`);
+        const qtdDesejada = parseInt(inputQtd.value);
         
         if (index !== -1) {
             if (produtos[index].estoque >= qtdDesejada) {
+                // Diminui o estoque no "Banco de Dados"
                 produtos[index].estoque -= qtdDesejada;
                 
                 const itemExistente = carrinho.find(item => item.id === id);
@@ -162,12 +173,13 @@
                     });
                 }
                 
-                localStorage.setItem('produtos_loja', JSON.stringify(produtos));
+                // Salva ambos de volta com a chave correta
+                localStorage.setItem(DATABASE_KEY, JSON.stringify(produtos));
                 localStorage.setItem('carrinho', JSON.stringify(carrinho));
                 
                 atualizarBadge();
                 carregarProdutos();
-                alert("Adicionado!");
+                alert("Arsenal atualizado! Item no carrinho.");
             } else {
                 alert("Estoque insuficiente!");
             }
