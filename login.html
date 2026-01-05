@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Hermano Info - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1 class="logo">HERMANO INFORMÁTICA</h1>
+    </header>
+    <main style="max-width: 400px; text-align: center;">
+        <h2>Acesso Administrativo</h2>
+        <form id="form-login">
+            <input type="text" id="user" placeholder="Usuário" required>
+            <input type="password" id="pass" placeholder="Senha" required>
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+    </main>
+    <footer>
+    <div class="footer-container">
+        <div class="footer-box">
+            <h3 class="logo" style="font-size: 1.5rem;">HERMANO INFO</h3>
+            <p>Líder em hardware de alta performance e manutenção especializada. Transformando seu setup desde 2024.</p>
+        </div>
+
+        <div class="footer-box">
+            <h4>Navegação</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="loja.html">Vitrine</a></li>
+                <li><a href="carrinho.html">Carrinho</a></li>
+                <li><a href="login.html">Área Admin</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-box">
+            <h4>Contato</h4>
+            <p><i class="fas fa-map-marker-alt"></i> Av. Tecnológica, 1024 - Neo City</p>
+            <p><i class="fas fa-phone"></i> (91) 98765-4321</p>
+            <p><i class="fas fa-envelope"></i> contato@hermanoinfo.com</p>
+        </div>
+
+        <div class="footer-box">
+            <h4>Siga-nos</h4>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        &copy; 2026 Hermano Informática - Todos os direitos reservados.
+    </div>
+</footer>
+
+    <script>
+        document.getElementById('form-login').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('user').value;
+            const pass = document.getElementById('pass').value;
+
+            if(user === "admin" && pass === "1234") {
+                sessionStorage.setItem('logado', 'true');
+                window.location.href = "cadastro.html";
+            } else {
+                alert("Acesso negado!");
+            }
+        });
+    </script>
+</body>
+</html>

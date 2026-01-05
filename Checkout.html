@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Hermano Info - Checkout Final</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .checkout-container { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 30px; }
+        .checkout-box { background: rgba(255, 255, 255, 0.03); padding: 25px; border-radius: 15px; border: 1px solid var(--glass-border); }
+        .step-title { font-family: 'Orbitron'; color: var(--primary-color); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .auth-btn { flex: 1; padding: 10px; background: none; border: 1px solid var(--glass-border); color: white; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+        .auth-btn.active { border-color: var(--primary-color); background: rgba(0, 212, 255, 0.1); }
+        .metodo-pagamento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .panel { display: none; }
+        .panel.active { display: block; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,15,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(10px);">
+        <div class="radar"></div>
+        <h2 id="status-text" style="font-family: 'Orbitron'; color: var(--primary-color); margin-top: 20px;">VALIDANDO DADOS...</h2>
+    </div>
+
+    <header>
+        <h1 class="logo">FINALIZAR AQUISIÇÃO</h1>
+        <nav>
+            <a href="loja.html">Voltar à Vitrine</a>
+            <a href="carrinho.html">Revisar Carrinho</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="checkout-container">
+            <div class="checkout-box">
+                <div id="auth-section">
+                    <div class="step-title"><i class="fas fa-user-shield"></i> 1. IDENTIFICAÇÃO</div>
+                    <div class="auth-tabs">
+                        <button class="auth-btn active" onclick="switchAuth('login')">Já sou cliente</button>
+                        <button class="auth-btn" onclick="switchAuth('cadastro')">Novo por aqui</button>
+                    </div>
+                    <div id="auth-form">
+                        <input type="email" id="user-email" placeholder="E-mail de acesso">
+                        <input type="password" id="user-pass" placeholder="Sua senha">
+                        <button class="btn" style="width: 100%;" onclick="simularLogin()">ACESSAR CONTA</button>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 30px 0;">
+
+                <div class="step-title"><i class="fas fa-map-marker-alt"></i> 2. ENDEREÇO DE ENTREGA</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" id="cep" placeholder="CEP (00000-000)" onblur="buscarCep(this.value)">
+                    <input type="text" id="bairro" placeholder="Bairro">
+                </div>
+                <input type="text" id="rua" placeholder="Nome da Rua / Logradouro">
+                <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px;">
+                    <input type="text" id="numero" placeholder="Número">
+                    <input type="text" id="complemento" placeholder="Complemento">
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                    <input type="text" id="cidade" placeholder="Cidade">
+                    <input type="text" id="estado" placeholder="UF">
+                </div>
+            </div>
+
+            <div class="checkout-box">
+                <div class="step-title"><i class="fas fa-wallet"></i> 3. PAGAMENTO</div>
+                
+                <div id="resumo-financeiro" style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(0,212,255,0.2);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Produtos:</span> <span id="resumo-subtotal">R$ 0,00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #ffde59;">
+                        <span>Frete Acumulado:</span> <span id="resumo-frete">R$ 0,00</span>
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.1);">
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <span style="font-family: 'Orbitron';">TOTAL:</span>
+                        <h2 id="total-final" style="margin: 0; color: var(--primary-color);">R$ 0,00</h2>
+                    </div>
+                </div>
+
+                <div class="metodo-pagamento-grid">
+                    <button class="auth-btn active" onclick="setPay('pix')"><i class="fab fa-pix"></i> Pix</button>
+                    <button class="auth-btn" onclick="setPay('card')"><i class="fas fa-credit-card"></i> Cartão</button>
+                    <button class="auth-btn" onclick="setPay('boleto')"><i class="fas fa-barcode"></i> Boleto</button>
+                </div>
+
+                <div id="pay-pix" class="panel active">
+                    <div style="background: white; padding: 10px; width: 140px; margin: 0 auto 10px; border-radius: 8px;">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=HermanoInfoVenda" style="width: 100%;">
+                    </div>
+                    <p style="font-size: 0.7rem; text-align: center; color: #00ff88;">PAGUE E RECEBA A NOTA FISCAL NO E-MAIL</p>
+                </div>
+
+                <div id="pay-card" class="panel">
+                    <input type="text" placeholder="0000 0000 0000 0000">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" placeholder="MM/AA">
+                        <input type="text" placeholder="CVV">
+                    </div>
+                </div>
+
+                <button class="btn" style="width: 100%; margin-top: 20px; font-size: 1.1rem; height: 55px;" onclick="finalizarPedido()">
+                    CONFIRMAR PAGAMENTO <i class="fas fa-shield-alt"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchAuth(type) {
+            document.querySelectorAll('.auth-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            const form = document.getElementById('auth-form');
+            if(type === 'login') {
+                form.innerHTML = '<input type="email" placeholder="E-mail de acesso"><input type="password" placeholder="Sua senha"><button class="btn" style="width: 100%;" onclick="simularLogin()">ACESSAR CONTA</button>';
+            } else {
+                form.innerHTML = '<input type="text" placeholder="Nome Completo"><input type="email" placeholder="Melhor E-mail"><input type="password" placeholder="Crie uma senha"><button class="btn" style="width: 100%;" onclick="simularLogin()">CRIAR CONTA</button>';
+            }
+        }
+
+        function simularLogin() {
+            alert("Usuário identificado!");
+            document.getElementById('auth-section').style.opacity = '0.5';
+            document.getElementById('auth-section').style.pointerEvents = 'none';
+        }
+
+        function setPay(type) {
+            document.querySelectorAll('.metodo-pagamento-grid .auth-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('pay-' + type)?.classList.add('active');
+        }
+
+        function carregarResumoFinanceiro() {
+            const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            let subtotal = 0;
+            let freteTotal = 0;
+
+            carrinho.forEach(item => {
+                subtotal += (item.preco * item.quantidade);
+                freteTotal += (item.freteAcumulado || 0);
+            });
+
+            document.getElementById('resumo-subtotal').innerText = `R$ ${subtotal.toFixed(2)}`;
+            document.getElementById('resumo-frete').innerText = `R$ ${freteTotal.toFixed(2)}`;
+            document.getElementById('total-final').innerText = `R$ ${(subtotal + freteTotal).toFixed(2)}`;
+        }
+
+        function buscarCep(cep) {
+            if(cep.length >= 8) {
+                document.getElementById('status-text').innerText = "SINCRONIZANDO ENDEREÇO...";
+                document.getElementById('loading-overlay').style.display = "flex";
+                setTimeout(() => {
+                    document.getElementById('loading-overlay').style.display = "none";
+                    document.getElementById('rua').value = "Av. Principal do Hardware";
+                    document.getElementById('bairro').value = "Centro Tecnológico";
+                    document.getElementById('cidade').value = "Neo City";
+                    document.getElementById('estado').value = "PA";
+                }, 1000);
+            }
+        }
+
+        function finalizarPedido() {
+            const cep = document.getElementById('cep').value;
+            if(!cep) { alert("Informe o endereço!"); return; }
+
+            const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            if(carrinho.length === 0) return;
+
+            document.getElementById('status-text').innerText = "PROCESSANDO TRANSAÇÃO...";
+            document.getElementById('loading-overlay').style.display = "flex";
+
+            setTimeout(() => {
+                // --- LÓGICA DE INTEGRAÇÃO COM ADMIN ---
+                let totalVenda = 0;
+                let lucroTotal = 0;
+                let itensNomes = [];
+
+                carrinho.forEach(item => {
+                    const precoVenda = item.preco;
+                    const precoCusto = item.custo || (precoVenda * 0.7); // Fallback caso custo não exista
+                    const frete = item.freteAcumulado || 0;
+
+                    totalVenda += (precoVenda * item.quantidade) + frete;
+                    lucroTotal += (precoVenda - precoCusto) * item.quantidade;
+                    itensNomes.push(`${item.quantidade}x ${item.nome}`);
+                });
+
+                // Salva no histórico que o Admin lê
+                const vendas = JSON.parse(localStorage.getItem('vendas_realizadas')) || [];
+                vendas.push({
+                    id: Date.now(),
+                    data: new Date().toISOString(),
+                    itens: itensNomes.join(', '),
+                    totalPago: totalVenda,
+                    lucroVenda: lucroTotal
+                });
+                localStorage.setItem('vendas_realizadas', JSON.stringify(vendas));
+
+                alert("AQUISIÇÃO CONCLUÍDA! Seu arsenal está a caminho.");
+                localStorage.removeItem('carrinho');
+                window.location.href = "index.html";
+            }, 2500);
+        }
+
+        window.onload = carregarResumoFinanceiro;
+    </script>
+</body>
+</html>

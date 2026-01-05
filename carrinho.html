@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Hermano Info - Carrinho Finalizado</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1 class="logo">HERMANO INFORMÁTICA</h1>
+        <nav>
+            <a href="index.html">Início</a>
+            <a href="loja.html">Vitrine</a>
+            <a href="login.html">Admin</a>
+            <a href="carrinho.html" class="carrinho-link">
+                <i class="fas fa-shopping-cart"></i> Carrinho 
+                <span id="cart-count" class="badge">0</span>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 style="font-family: 'Orbitron'; color: var(--primary-color); text-align: center; letter-spacing: 2px;">
+            <i class="fas fa-microchip"></i> REVISÃO DO PEDIDO
+        </h2>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço Unit.</th>
+                        <th>Frete (Item)</th>
+                        <th>Qtd.</th>
+                        <th>Subtotal</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-carrinho">
+                    </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px; text-align: right; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+            <div style="color: #888; margin-bottom: 5px;">
+                Subtotal Produtos: <span id="soma-produtos">R$ 0,00</span>
+            </div>
+            <div style="color: #ffde59; margin-bottom: 10px;">
+                Logística Acumulada: <span id="soma-frete">R$ 0,00</span>
+            </div>
+            <h3 id="total-carrinho" style="font-family: 'Orbitron'; color: var(--primary-color); font-size: 2.2rem; text-shadow: 0 0 15px rgba(0,212,255,0.4);">
+                Total: R$ 0,00
+            </h3>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
+                <a href="loja.html" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid #444;">ADICIONAR MAIS ITENS</a>
+                <button onclick="tentarFinalizar()" class="btn" style="box-shadow: 0 0 20px rgba(0,212,255,0.3); padding: 15px 30px;">
+                    PROSSEGUIR PARA PAGAMENTO <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function exibirCarrinho() {
+            const lista = document.getElementById('lista-carrinho');
+            const totalElemento = document.getElementById('total-carrinho');
+            const somaProdElem = document.getElementById('soma-produtos');
+            const somaFreteElem = document.getElementById('soma-frete');
+            const cartCount = document.getElementById('cart-count');
+            
+            let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            
+            lista.innerHTML = '';
+            let totalProdutos = 0;
+            let totalFrete = 0;
+            let totalItens = 0;
+
+            if (carrinho.length === 0) {
+                lista.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 50px; color: #888;">Nenhum componente detectado no carrinho.</td></tr>';
+            } else {
+                carrinho.forEach((item, index) => {
+                    let subtotalItem = item.preco * item.quantidade;
+                    let freteItem = item.freteAcumulado || 0;
+                    
+                    totalProdutos += subtotalItem;
+                    totalFrete += freteItem;
+                    totalItens += item.quantidade;
+
+                    lista.innerHTML += `
+                        <tr>
+                            <td style="color: var(--primary-color); font-weight: bold;">${item.nome}</td>
+                            <td>R$ ${item.preco.toFixed(2)}</td>
+                            <td style="color: #ffde59;">R$ ${freteItem.toFixed(2)}</td>
+                            <td>${item.quantidade}</td>
+                            <td style="color: #fff; font-weight: bold;">R$ ${(subtotalItem + freteItem).toFixed(2)}</td>
+                            <td>
+                                <button onclick="removerItem(${index})" class="btn" style="background: #ff4b2b; padding: 5px 12px; font-size: 0.75rem; border: none;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            somaProdElem.innerText = `R$ ${totalProdutos.toFixed(2)}`;
+            somaFreteElem.innerText = `R$ ${totalFrete.toFixed(2)}`;
+            totalElemento.innerText = `Total: R$ ${(totalProdutos + totalFrete).toFixed(2)}`;
+            cartCount.innerText = totalItens;
+        }
+
+        function removerItem(index) {
+            let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            let produtos = JSON.parse(localStorage.getItem('produtos_loja')) || [];
+            
+            const item = carrinho[index];
+            const pIndex = produtos.findIndex(p => p.id === item.id);
+            
+            // Devolve a quantidade para o estoque
+            if (pIndex !== -1) {
+                produtos[pIndex].estoque += item.quantidade;
+                localStorage.setItem('produtos_loja', JSON.stringify(produtos));
+            }
+
+            carrinho.splice(index, 1);
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            exibirCarrinho();
+        }
+
+        function tentarFinalizar() {
+            let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            if (carrinho.length === 0) {
+                alert("O sistema detectou que seu carrinho está vazio!");
+            } else {
+                window.location.href = 'checkout.html';
+            }
+        }
+
+        window.onload = exibirCarrinho;
+    </script>
+</body>
+</html>
